@@ -1,0 +1,199 @@
+basePath: /api/v1
+definitions:
+  handler.CreatePasteRequest:
+    properties:
+      content:
+        example: console.log('Hello, World!')
+        type: string
+      expires_in:
+        example: 1h
+        type: string
+      is_private:
+        example: false
+        type: boolean
+      syntax_type:
+        example: javascript
+        type: string
+    required:
+    - content
+    type: object
+  handler.CreatePasteResponse:
+    properties:
+      expires_at:
+        example: "2024-01-15T15:00:00Z"
+        type: string
+      short_id:
+        example: xK9a2B
+        type: string
+      url:
+        example: http://localhost:8080/xK9a2B
+        type: string
+    type: object
+  handler.ErrorResponse:
+    properties:
+      error:
+        example: Paste not found
+        type: string
+      max_size:
+        example: 1MB
+        type: string
+    type: object
+  handler.GetPasteResponse:
+    properties:
+      content:
+        example: console.log('Hello, World!')
+        type: string
+      created_at:
+        example: "2024-01-15T14:00:00Z"
+        type: string
+      expires_at:
+        example: "2024-01-15T15:00:00Z"
+        type: string
+      short_id:
+        example: xK9a2B
+        type: string
+      syntax_type:
+        example: javascript
+        type: string
+    type: object
+  handler.HealthResponse:
+    properties:
+      status:
+        example: ok
+        type: string
+      timestamp:
+        example: "2024-01-15T14:00:00Z"
+        type: string
+    type: object
+host: localhost:8080
+info:
+  contact:
+    email: support@gisty.io
+    name: API Support
+    url: https://github.com/huylvt/gisty
+  description: Fast snippet sharing platform - API documentation
+  license:
+    name: MIT
+    url: https://opensource.org/licenses/MIT
+  termsOfService: http://swagger.io/terms/
+  title: Gisty API
+  version: "1.0"
+paths:
+  /health:
+    get:
+      description: Check if the service is running
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Service is healthy
+          schema:
+            $ref: '#/definitions/handler.HealthResponse'
+      summary: Health check
+      tags:
+      - health
+  /pastes:
+    post:
+      consumes:
+      - application/json
+      description: Create a new code/text snippet with optional expiration and syntax
+        highlighting
+      parameters:
+      - description: Paste content and options
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/handler.CreatePasteRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Paste created successfully
+          schema:
+            $ref: '#/definitions/handler.CreatePasteResponse'
+        "400":
+          description: Invalid request (empty content, invalid syntax_type, invalid
+            expires_in)
+          schema:
+            $ref: '#/definitions/handler.ErrorResponse'
+        "413":
+          description: Content too large (max 1MB)
+          schema:
+            $ref: '#/definitions/handler.ErrorResponse'
+        "429":
+          description: Rate limit exceeded
+          schema:
+            $ref: '#/definitions/handler.ErrorResponse'
+        "503":
+          description: Service temporarily unavailable
+          schema:
+            $ref: '#/definitions/handler.ErrorResponse'
+      summary: Create a new paste
+      tags:
+      - pastes
+  /pastes/{id}:
+    delete:
+      consumes:
+      - application/json
+      description: Delete a paste by its short ID
+      parameters:
+      - description: Paste short ID
+        example: xK9a2B
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "204":
+          description: Paste deleted successfully
+        "400":
+          description: Missing paste ID
+          schema:
+            $ref: '#/definitions/handler.ErrorResponse'
+        "404":
+          description: Paste not found
+          schema:
+            $ref: '#/definitions/handler.ErrorResponse'
+      summary: Delete a paste
+      tags:
+      - pastes
+    get:
+      consumes:
+      - application/json
+      description: Retrieve a paste's content and metadata by its short ID
+      parameters:
+      - description: Paste short ID
+        example: xK9a2B
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Paste retrieved successfully
+          schema:
+            $ref: '#/definitions/handler.GetPasteResponse'
+        "400":
+          description: Missing paste ID
+          schema:
+            $ref: '#/definitions/handler.ErrorResponse'
+        "404":
+          description: Paste not found
+          schema:
+            $ref: '#/definitions/handler.ErrorResponse'
+        "410":
+          description: Paste has expired
+          schema:
+            $ref: '#/definitions/handler.ErrorResponse'
+      summary: Get a paste by ID
+      tags:
+      - pastes
+schemes:
+- http
+- https
+swagger: "2.0"

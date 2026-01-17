@@ -1,0 +1,17 @@
+server:
+  port: "8080"
+  env: "development"
+
+mongodb:
+  uri: "mongodb://localhost:27017"
+  database: "gisty"
+
+redis:
+  uri: "redis://localhost:6379"
+
+s3:
+  bucket_name: "gisty-dev"
+  region: "ap-southeast-1"
+  access_key_id: ""
+  secret_access_key: ""
+  endpoint: "" # Optional: for MinIO or other S3-compatible storage
