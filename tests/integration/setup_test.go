@@ -34,6 +34,13 @@ type TestEnv struct {
 	Cleanup      func()
 }
 
+// terminateContainer safely terminates a container, ignoring errors during cleanup
+func terminateContainer(ctx context.Context, container testcontainers.Container) {
+	if container != nil {
+		_ = container.Terminate(ctx)
+	}
+}
+
 // SetupTestEnv creates a complete test environment with all dependencies
 func SetupTestEnv(t *testing.T) *TestEnv {
 	t.Helper()
@@ -47,21 +54,21 @@ func SetupTestEnv(t *testing.T) *TestEnv {
 
 	mongoURI, err := mongoC.ConnectionString(ctx)
 	if err != nil {
-		mongoC.Terminate(ctx)
+		terminateContainer(ctx, mongoC)
 		t.Fatalf("Failed to get MongoDB connection string: %v", err)
 	}
 
 	// Start Redis container
 	redisC, err := redis.Run(ctx, "redis:7-alpine")
 	if err != nil {
-		mongoC.Terminate(ctx)
+		terminateContainer(ctx, mongoC)
 		t.Fatalf("Failed to start Redis container: %v", err)
 	}
 
 	redisURI, err := redisC.ConnectionString(ctx)
 	if err != nil {
-		mongoC.Terminate(ctx)
-		redisC.Terminate(ctx)
+		terminateContainer(ctx, mongoC)
+		terminateContainer(ctx, redisC)
 		t.Fatalf("Failed to get Redis connection string: %v", err)
 	}
 
@@ -71,25 +78,25 @@ func SetupTestEnv(t *testing.T) *TestEnv {
 		minio.WithPassword("minioadmin"),
 	)
 	if err != nil {
-		mongoC.Terminate(ctx)
-		redisC.Terminate(ctx)
+		terminateContainer(ctx, mongoC)
+		terminateContainer(ctx, redisC)
 		t.Fatalf("Failed to start MinIO container: %v", err)
 	}
 
 	minioEndpoint, err := minioC.ConnectionString(ctx)
 	if err != nil {
-		mongoC.Terminate(ctx)
-		redisC.Terminate(ctx)
-		minioC.Terminate(ctx)
+		terminateContainer(ctx, mongoC)
+		terminateContainer(ctx, redisC)
+		terminateContainer(ctx, minioC)
 		t.Fatalf("Failed to get MinIO endpoint: %v", err)
 	}
 
 	// Connect to MongoDB
 	mongoDB, err := repository.NewMongoClient(ctx, mongoURI, "gisty_integration_test")
 	if err != nil {
-		mongoC.Terminate(ctx)
-		redisC.Terminate(ctx)
-		minioC.Terminate(ctx)
+		terminateContainer(ctx, mongoC)
+		terminateContainer(ctx, redisC)
+		terminateContainer(ctx, minioC)
 		t.Fatalf("Failed to connect to MongoDB: %v", err)
 	}
 
@@ -97,9 +104,9 @@ func SetupTestEnv(t *testing.T) *TestEnv {
 	redisClient, err := repository.NewRedisClient(ctx, redisURI)
 	if err != nil {
 		mongoDB.Close(ctx)
-		mongoC.Terminate(ctx)
-		redisC.Terminate(ctx)
-		minioC.Terminate(ctx)
+		terminateContainer(ctx, mongoC)
+		terminateContainer(ctx, redisC)
+		terminateContainer(ctx, minioC)
 		t.Fatalf("Failed to connect to Redis: %v", err)
 	}
 
@@ -114,18 +121,18 @@ func SetupTestEnv(t *testing.T) *TestEnv {
 	if err != nil {
 		redisClient.Close()
 		mongoDB.Close(ctx)
-		mongoC.Terminate(ctx)
-		redisC.Terminate(ctx)
-		minioC.Terminate(ctx)
+		terminateContainer(ctx, mongoC)
+		terminateContainer(ctx, redisC)
+		terminateContainer(ctx, minioC)
 		t.Fatalf("Failed to create S3 client: %v", err)
 	}
 
 	if err := s3Client.EnsureBucketExists(ctx); err != nil {
 		redisClient.Close()
 		mongoDB.Close(ctx)
-		mongoC.Terminate(ctx)
-		redisC.Terminate(ctx)
-		minioC.Terminate(ctx)
+		terminateContainer(ctx, mongoC)
+		terminateContainer(ctx, redisC)
+		terminateContainer(ctx, minioC)
 		t.Fatalf("Failed to create S3 bucket: %v", err)
 	}
 
@@ -134,9 +141,9 @@ func SetupTestEnv(t *testing.T) *TestEnv {
 	if err != nil {
 		redisClient.Close()
 		mongoDB.Close(ctx)
-		mongoC.Terminate(ctx)
-		redisC.Terminate(ctx)
-		minioC.Terminate(ctx)
+		terminateContainer(ctx, mongoC)
+		terminateContainer(ctx, redisC)
+		terminateContainer(ctx, minioC)
 		t.Fatalf("Failed to initialize KGS: %v", err)
 	}
 
@@ -144,9 +151,9 @@ func SetupTestEnv(t *testing.T) *TestEnv {
 	if _, err := kgs.GenerateKeys(ctx, 100); err != nil {
 		redisClient.Close()
 		mongoDB.Close(ctx)
-		mongoC.Terminate(ctx)
-		redisC.Terminate(ctx)
-		minioC.Terminate(ctx)
+		terminateContainer(ctx, mongoC)
+		terminateContainer(ctx, redisC)
+		terminateContainer(ctx, minioC)
 		t.Fatalf("Failed to generate keys: %v", err)
 	}
 
@@ -157,9 +164,9 @@ func SetupTestEnv(t *testing.T) *TestEnv {
 	if err != nil {
 		redisClient.Close()
 		mongoDB.Close(ctx)
-		mongoC.Terminate(ctx)
-		redisC.Terminate(ctx)
-		minioC.Terminate(ctx)
+		terminateContainer(ctx, mongoC)
+		terminateContainer(ctx, redisC)
+		terminateContainer(ctx, minioC)
 		t.Fatalf("Failed to initialize paste repository: %v", err)
 	}
 
@@ -195,9 +202,9 @@ func SetupTestEnv(t *testing.T) *TestEnv {
 		server.Close()
 		redisClient.Close()
 		mongoDB.Close(ctx)
-		mongoC.Terminate(ctx)
-		redisC.Terminate(ctx)
-		minioC.Terminate(ctx)
+		terminateContainer(ctx, mongoC)
+		terminateContainer(ctx, redisC)
+		terminateContainer(ctx, minioC)
 	}
 
 	return &TestEnv{
@@ -224,21 +231,21 @@ func SetupTestEnvWithRateLimit(t *testing.T, requestsPerMinute int) *TestEnv {
 
 	mongoURI, err := mongoC.ConnectionString(ctx)
 	if err != nil {
-		mongoC.Terminate(ctx)
+		terminateContainer(ctx, mongoC)
 		t.Fatalf("Failed to get MongoDB connection string: %v", err)
 	}
 
 	// Start Redis container
 	redisC, err := redis.Run(ctx, "redis:7-alpine")
 	if err != nil {
-		mongoC.Terminate(ctx)
+		terminateContainer(ctx, mongoC)
 		t.Fatalf("Failed to start Redis container: %v", err)
 	}
 
 	redisURI, err := redisC.ConnectionString(ctx)
 	if err != nil {
-		mongoC.Terminate(ctx)
-		redisC.Terminate(ctx)
+		terminateContainer(ctx, mongoC)
+		terminateContainer(ctx, redisC)
 		t.Fatalf("Failed to get Redis connection string: %v", err)
 	}
 
@@ -248,25 +255,25 @@ func SetupTestEnvWithRateLimit(t *testing.T, requestsPerMinute int) *TestEnv {
 		minio.WithPassword("minioadmin"),
 	)
 	if err != nil {
-		mongoC.Terminate(ctx)
-		redisC.Terminate(ctx)
+		terminateContainer(ctx, mongoC)
+		terminateContainer(ctx, redisC)
 		t.Fatalf("Failed to start MinIO container: %v", err)
 	}
 
 	minioEndpoint, err := minioC.ConnectionString(ctx)
 	if err != nil {
-		mongoC.Terminate(ctx)
-		redisC.Terminate(ctx)
-		minioC.Terminate(ctx)
+		terminateContainer(ctx, mongoC)
+		terminateContainer(ctx, redisC)
+		terminateContainer(ctx, minioC)
 		t.Fatalf("Failed to get MinIO endpoint: %v", err)
 	}
 
 	// Connect to MongoDB
 	mongoDB, err := repository.NewMongoClient(ctx, mongoURI, "gisty_integration_test")
 	if err != nil {
-		mongoC.Terminate(ctx)
-		redisC.Terminate(ctx)
-		minioC.Terminate(ctx)
+		terminateContainer(ctx, mongoC)
+		terminateContainer(ctx, redisC)
+		terminateContainer(ctx, minioC)
 		t.Fatalf("Failed to connect to MongoDB: %v", err)
 	}
 
@@ -274,9 +281,9 @@ func SetupTestEnvWithRateLimit(t *testing.T, requestsPerMinute int) *TestEnv {
 	redisClient, err := repository.NewRedisClient(ctx, redisURI)
 	if err != nil {
 		mongoDB.Close(ctx)
-		mongoC.Terminate(ctx)
-		redisC.Terminate(ctx)
-		minioC.Terminate(ctx)
+		terminateContainer(ctx, mongoC)
+		terminateContainer(ctx, redisC)
+		terminateContainer(ctx, minioC)
 		t.Fatalf("Failed to connect to Redis: %v", err)
 	}
 
@@ -291,18 +298,18 @@ func SetupTestEnvWithRateLimit(t *testing.T, requestsPerMinute int) *TestEnv {
 	if err != nil {
 		redisClient.Close()
 		mongoDB.Close(ctx)
-		mongoC.Terminate(ctx)
-		redisC.Terminate(ctx)
-		minioC.Terminate(ctx)
+		terminateContainer(ctx, mongoC)
+		terminateContainer(ctx, redisC)
+		terminateContainer(ctx, minioC)
 		t.Fatalf("Failed to create S3 client: %v", err)
 	}
 
 	if err := s3Client.EnsureBucketExists(ctx); err != nil {
 		redisClient.Close()
 		mongoDB.Close(ctx)
-		mongoC.Terminate(ctx)
-		redisC.Terminate(ctx)
-		minioC.Terminate(ctx)
+		terminateContainer(ctx, mongoC)
+		terminateContainer(ctx, redisC)
+		terminateContainer(ctx, minioC)
 		t.Fatalf("Failed to create S3 bucket: %v", err)
 	}
 
@@ -311,18 +318,18 @@ func SetupTestEnvWithRateLimit(t *testing.T, requestsPerMinute int) *TestEnv {
 	if err != nil {
 		redisClient.Close()
 		mongoDB.Close(ctx)
-		mongoC.Terminate(ctx)
-		redisC.Terminate(ctx)
-		minioC.Terminate(ctx)
+		terminateContainer(ctx, mongoC)
+		terminateContainer(ctx, redisC)
+		terminateContainer(ctx, minioC)
 		t.Fatalf("Failed to initialize KGS: %v", err)
 	}
 
 	if _, err := kgs.GenerateKeys(ctx, 100); err != nil {
 		redisClient.Close()
 		mongoDB.Close(ctx)
-		mongoC.Terminate(ctx)
-		redisC.Terminate(ctx)
-		minioC.Terminate(ctx)
+		terminateContainer(ctx, mongoC)
+		terminateContainer(ctx, redisC)
+		terminateContainer(ctx, minioC)
 		t.Fatalf("Failed to generate keys: %v", err)
 	}
 
@@ -333,9 +340,9 @@ func SetupTestEnvWithRateLimit(t *testing.T, requestsPerMinute int) *TestEnv {
 	if err != nil {
 		redisClient.Close()
 		mongoDB.Close(ctx)
-		mongoC.Terminate(ctx)
-		redisC.Terminate(ctx)
-		minioC.Terminate(ctx)
+		terminateContainer(ctx, mongoC)
+		terminateContainer(ctx, redisC)
+		terminateContainer(ctx, minioC)
 		t.Fatalf("Failed to initialize paste repository: %v", err)
 	}
 
@@ -370,9 +377,9 @@ func SetupTestEnvWithRateLimit(t *testing.T, requestsPerMinute int) *TestEnv {
 		server.Close()
 		redisClient.Close()
 		mongoDB.Close(ctx)
-		mongoC.Terminate(ctx)
-		redisC.Terminate(ctx)
-		minioC.Terminate(ctx)
+		terminateContainer(ctx, mongoC)
+		terminateContainer(ctx, redisC)
+		terminateContainer(ctx, minioC)
 	}
 
 	return &TestEnv{
@@ -535,7 +542,7 @@ func SkipIfNoDocker(t *testing.T) {
 	}
 	// Clean up the test container
 	if container != nil {
-		container.Terminate(ctx)
+		terminateContainer(ctx, container)
 	}
 }
 
