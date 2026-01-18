@@ -27,8 +27,8 @@ func setupTestDB(t *testing.T) (*mongo.Database, func()) {
 
 	// Cleanup function
 	cleanup := func() {
-		db.Drop(context.Background())
-		client.Disconnect(context.Background())
+		_ = db.Drop(context.Background())
+		_ = client.Disconnect(context.Background())
 	}
 
 	return db, cleanup

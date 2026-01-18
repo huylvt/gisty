@@ -24,7 +24,7 @@ func setupPasteServiceTest(t *testing.T) (*PasteService, func()) {
 	// Connect to Redis
 	redisClient, err := repository.NewRedisClient(ctx, "redis://localhost:6379")
 	if err != nil {
-		client.Disconnect(ctx)
+		_ = client.Disconnect(ctx)
 		t.Skipf("Redis not available: %v", err)
 	}
 
@@ -38,7 +38,7 @@ func setupPasteServiceTest(t *testing.T) (*PasteService, func()) {
 	})
 	if err != nil {
 		redisClient.Close()
-		client.Disconnect(ctx)
+		_ = client.Disconnect(ctx)
 		t.Skipf("MinIO not available: %v", err)
 	}
 
@@ -46,12 +46,12 @@ func setupPasteServiceTest(t *testing.T) (*PasteService, func()) {
 	kgs, err := NewKGS(db)
 	if err != nil {
 		redisClient.Close()
-		client.Disconnect(ctx)
+		_ = client.Disconnect(ctx)
 		t.Fatalf("Failed to create KGS: %v", err)
 	}
 
 	// Pre-generate some keys
-	kgs.GenerateKeys(ctx, 100)
+	_, _ = kgs.GenerateKeys(ctx, 100)
 
 	storage := NewStorage(s3Client)
 	cache := NewCache(redisClient)
@@ -59,16 +59,16 @@ func setupPasteServiceTest(t *testing.T) (*PasteService, func()) {
 	pasteRepo, err := repository.NewPasteRepository(db)
 	if err != nil {
 		redisClient.Close()
-		client.Disconnect(ctx)
+		_ = client.Disconnect(ctx)
 		t.Fatalf("Failed to create paste repository: %v", err)
 	}
 
 	pasteService := NewPasteService(kgs, storage, cache, pasteRepo, "http://localhost:8080")
 
 	cleanup := func() {
-		db.Drop(ctx)
+		_ = db.Drop(ctx)
 		redisClient.Close()
-		client.Disconnect(ctx)
+		_ = client.Disconnect(ctx)
 	}
 
 	return pasteService, cleanup

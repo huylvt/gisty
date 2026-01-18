@@ -250,7 +250,7 @@ func TestCache_SetWithDefaultTTL(t *testing.T) {
 	if err != nil {
 		t.Fatalf("SetWithDefaultTTL() error = %v", err)
 	}
-	defer cache.Delete(ctx, shortID)
+	defer func() { _ = cache.Delete(ctx, shortID) }()
 
 	// Verify TTL is close to custom default
 	remainingTTL, err := cache.GetTTL(ctx, shortID)

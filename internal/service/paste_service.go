@@ -182,7 +182,7 @@ func (s *PasteService) CreatePaste(ctx context.Context, req *CreatePasteRequest)
 
 	if err := s.pasteRepo.Create(ctx, paste); err != nil {
 		// Try to clean up S3 on failure
-		s.storage.DeleteContent(ctx, shortID)
+		_ = s.storage.DeleteContent(ctx, shortID)
 		return nil, fmt.Errorf("paste: failed to create record: %w", err)
 	}
 

@@ -108,31 +108,31 @@ func Load() (*Config, error) {
 // bindEnvVars binds environment variables to config keys
 func bindEnvVars(v *viper.Viper) {
 	// Server
-	v.BindEnv("server.port", "PORT")
-	v.BindEnv("server.env", "ENV")
-	v.BindEnv("server.base_url", "BASE_URL")
+	_ = v.BindEnv("server.port", "PORT")
+	_ = v.BindEnv("server.env", "ENV")
+	_ = v.BindEnv("server.base_url", "BASE_URL")
 
 	// MongoDB
-	v.BindEnv("mongodb.uri", "MONGO_URI")
-	v.BindEnv("mongodb.database", "MONGO_DB")
+	_ = v.BindEnv("mongodb.uri", "MONGO_URI")
+	_ = v.BindEnv("mongodb.database", "MONGO_DB")
 
 	// Redis
-	v.BindEnv("redis.uri", "REDIS_URI")
+	_ = v.BindEnv("redis.uri", "REDIS_URI")
 
 	// S3
-	v.BindEnv("s3.bucket_name", "S3_BUCKET_NAME")
-	v.BindEnv("s3.region", "S3_REGION")
-	v.BindEnv("s3.access_key_id", "S3_ACCESS_KEY_ID")
-	v.BindEnv("s3.secret_access_key", "S3_SECRET_ACCESS_KEY")
-	v.BindEnv("s3.endpoint", "S3_ENDPOINT")
+	_ = v.BindEnv("s3.bucket_name", "S3_BUCKET_NAME")
+	_ = v.BindEnv("s3.region", "S3_REGION")
+	_ = v.BindEnv("s3.access_key_id", "S3_ACCESS_KEY_ID")
+	_ = v.BindEnv("s3.secret_access_key", "S3_SECRET_ACCESS_KEY")
+	_ = v.BindEnv("s3.endpoint", "S3_ENDPOINT")
 
 	// Cleanup
-	v.BindEnv("cleanup.interval", "CLEANUP_INTERVAL")
-	v.BindEnv("cleanup.batch_size", "CLEANUP_BATCH_SIZE")
+	_ = v.BindEnv("cleanup.interval", "CLEANUP_INTERVAL")
+	_ = v.BindEnv("cleanup.batch_size", "CLEANUP_BATCH_SIZE")
 
 	// Rate Limit
-	v.BindEnv("ratelimit.requests_per_minute", "RATE_LIMIT_REQUESTS_PER_MINUTE")
-	v.BindEnv("ratelimit.enabled", "RATE_LIMIT_ENABLED")
+	_ = v.BindEnv("ratelimit.requests_per_minute", "RATE_LIMIT_REQUESTS_PER_MINUTE")
+	_ = v.BindEnv("ratelimit.enabled", "RATE_LIMIT_ENABLED")
 }
 
 // Validate checks if required configuration fields are set

@@ -38,7 +38,7 @@ func setupCleanupTest(t *testing.T) (*CleanupWorker, *repository.PasteRepository
 		mongoClient.Close(context.Background())
 		t.Skipf("Skipping test, S3 not available: %v", err)
 	}
-	s3Client.EnsureBucketExists(context.Background())
+	_ = s3Client.EnsureBucketExists(context.Background())
 
 	// Create repositories and services
 	pasteRepo, err := repository.NewPasteRepository(mongoClient.Database)
@@ -58,7 +58,7 @@ func setupCleanupTest(t *testing.T) (*CleanupWorker, *repository.PasteRepository
 
 	cleanup := func() {
 		// Clean up test data
-		mongoClient.Database.Collection("pastes").Drop(context.Background())
+		_ = mongoClient.Database.Collection("pastes").Drop(context.Background())
 		redisClient.Close()
 		mongoClient.Close(context.Background())
 	}

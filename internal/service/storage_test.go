@@ -59,7 +59,7 @@ func TestStorage_SaveAndGetContent(t *testing.T) {
 	}
 
 	// Cleanup
-	storage.DeleteContent(ctx, shortID)
+	_ = storage.DeleteContent(ctx, shortID)
 }
 
 func TestStorage_SaveAndGetContent_LargeContent(t *testing.T) {
@@ -89,7 +89,7 @@ func TestStorage_SaveAndGetContent_LargeContent(t *testing.T) {
 	}
 
 	// Cleanup
-	storage.DeleteContent(ctx, shortID)
+	_ = storage.DeleteContent(ctx, shortID)
 }
 
 func TestStorage_GetContent_NotFound(t *testing.T) {
@@ -175,7 +175,7 @@ func TestStorage_ContentExists(t *testing.T) {
 	}
 
 	// Cleanup
-	storage.DeleteContent(ctx, shortID)
+	_ = storage.DeleteContent(ctx, shortID)
 }
 
 func TestStorage_CompressionEfficiency(t *testing.T) {
@@ -236,5 +236,5 @@ Emoji: 😀🎉🚀`
 	}
 
 	// Cleanup
-	storage.DeleteContent(ctx, shortID)
+	_ = storage.DeleteContent(ctx, shortID)
 }

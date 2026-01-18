@@ -15,9 +15,6 @@ jobs:
     name: Build and Push Images
     runs-on: ubuntu-latest
 
-    outputs:
-      image_tag: ${{ steps.meta.outputs.tags }}
-
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -31,14 +28,9 @@ jobs:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
-      - name: Extract metadata for backend
-        id: meta-backend
-        uses: docker/metadata-action@v5
-        with:
-          images: ${{ env.BACKEND_IMAGE }}
-          tags: |
-            type=sha,prefix=
-            type=raw,value=latest,enable=${{ github.ref == 'refs/heads/main' }}
+      - name: Get short SHA
+        id: sha
+        run: echo "short=$(echo ${{ github.sha }} | cut -c1-7)" >> $GITHUB_OUTPUT
 
       - name: Build and push backend image
         uses: docker/build-push-action@v5
@@ -46,19 +38,11 @@ jobs:
           context: .
           file: ./Dockerfile
           push: true
-          tags: ${{ steps.meta-backend.outputs.tags }}
-          labels: ${{ steps.meta-backend.outputs.labels }}
+          tags: |
+            ${{ env.BACKEND_IMAGE }}:${{ steps.sha.outputs.short }}
+            ${{ env.BACKEND_IMAGE }}:latest
           cache-from: type=gha
           cache-to: type=gha,mode=max
-
-      - name: Extract metadata for frontend
-        id: meta-frontend
-        uses: docker/metadata-action@v5
-        with:
-          images: ${{ env.FRONTEND_IMAGE }}
-          tags: |
-            type=sha,prefix=
-            type=raw,value=latest,enable=${{ github.ref == 'refs/heads/main' }}
 
       - name: Build and push frontend image
         uses: docker/build-push-action@v5
@@ -66,16 +50,16 @@ jobs:
           context: ./web
           file: ./web/Dockerfile
           push: true
-          tags: ${{ steps.meta-frontend.outputs.tags }}
-          labels: ${{ steps.meta-frontend.outputs.labels }}
+          tags: |
+            ${{ env.FRONTEND_IMAGE }}:${{ steps.sha.outputs.short }}
+            ${{ env.FRONTEND_IMAGE }}:latest
           cache-from: type=gha
           cache-to: type=gha,mode=max
           build-args: |
             VITE_API_URL=${{ secrets.API_URL }}
 
-      - name: Set output
-        id: meta
-        run: echo "tags=${{ github.sha }}" >> $GITHUB_OUTPUT
+    outputs:
+      image_tag: ${{ steps.sha.outputs.short }}
 
   deploy:
     name: Deploy to Production
@@ -123,8 +107,8 @@ jobs:
           CLEANUP_BATCH_SIZE=100
 
           # Docker images
-          BACKEND_IMAGE=${{ env.BACKEND_IMAGE }}:${{ github.sha }}
-          FRONTEND_IMAGE=${{ env.FRONTEND_IMAGE }}:${{ github.sha }}
+          BACKEND_IMAGE=${{ env.BACKEND_IMAGE }}:${{ needs.build-and-push.outputs.image_tag }}
+          FRONTEND_IMAGE=${{ env.FRONTEND_IMAGE }}:${{ needs.build-and-push.outputs.image_tag }}
           EOF
 
       - name: Copy files to server

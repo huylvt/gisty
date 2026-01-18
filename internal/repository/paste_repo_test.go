@@ -26,8 +26,8 @@ func setupTestPasteDB(t *testing.T) (*mongo.Database, func()) {
 
 	// Cleanup function
 	cleanup := func() {
-		db.Collection(PasteCollectionName).Drop(context.Background())
-		client.Disconnect(context.Background())
+		_ = db.Collection(PasteCollectionName).Drop(context.Background())
+		_ = client.Disconnect(context.Background())
 	}
 
 	return db, cleanup
@@ -374,7 +374,7 @@ func TestPasteRepository_Count(t *testing.T) {
 			CreatedAt:  time.Now(),
 			SyntaxType: "text",
 		}
-		repo.Create(ctx, paste)
+		_ = repo.Create(ctx, paste)
 	}
 
 	count, err = repo.Count(ctx)
