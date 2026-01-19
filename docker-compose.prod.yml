@@ -16,8 +16,8 @@ services:
     depends_on:
       gisty:
         condition: service_healthy
-      gisty-web:
-        condition: service_healthy
+      # gisty-web:
+      #   condition: service_healthy
     healthcheck:
       test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:80/health"]
       interval: 30s
