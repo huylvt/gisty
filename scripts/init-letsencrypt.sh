@@ -15,6 +15,7 @@ STAGING="${STAGING:-0}"  # Set to 1 for testing
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PROJECT_DIR="$(dirname "$SCRIPT_DIR")"
 CERTBOT_PATH="${PROJECT_DIR}/certbot"
+NGINX_PATH="${PROJECT_DIR}/nginx"
 
 echo "=== Let's Encrypt SSL Certificate Setup ==="
 echo "Domain: ${DOMAIN}"
@@ -33,34 +34,21 @@ if [ ! -e "${CERTBOT_PATH}/conf/options-ssl-nginx.conf" ]; then
     curl -s https://raw.githubusercontent.com/certbot/certbot/master/certbot/certbot/ssl-dhparams.pem > "${CERTBOT_PATH}/conf/ssl-dhparams.pem"
 fi
 
-# Create dummy certificate for nginx to start
-CERT_PATH="${CERTBOT_PATH}/conf/live/${DOMAIN}"
-if [ ! -d "${CERT_PATH}" ]; then
-    echo "Creating dummy certificate for ${DOMAIN}..."
-    mkdir -p "${CERT_PATH}"
-    openssl req -x509 -nodes -newkey rsa:4096 -days 1 \
-        -keyout "${CERT_PATH}/privkey.pem" \
-        -out "${CERT_PATH}/fullchain.pem" \
-        -subj "/CN=localhost"
-fi
-
-# Start nginx with dummy certificate
-echo "Starting nginx..."
 cd "${PROJECT_DIR}"
-docker compose -f docker-compose.prod.yml up -d nginx
 
-echo "Waiting for nginx to start..."
-sleep 5
+# Step 1: Use init config (HTTP only) to start nginx and get certificate
+echo "Step 1: Starting nginx with HTTP-only config..."
+cp "${NGINX_PATH}/nginx.init.conf" "${NGINX_PATH}/nginx.conf.bak"
+cp "${NGINX_PATH}/nginx.init.conf" "${NGINX_PATH}/nginx.conf"
 
-# Delete dummy certificate
-echo "Deleting dummy certificate..."
-docker compose -f docker-compose.prod.yml run --rm --entrypoint "\
-  rm -Rf /etc/letsencrypt/live/${DOMAIN} && \
-  rm -Rf /etc/letsencrypt/archive/${DOMAIN} && \
-  rm -Rf /etc/letsencrypt/renewal/${DOMAIN}.conf" certbot
+# Start all services
+docker compose -f docker-compose.prod.yml --env-file deploy/.env up -d
 
-# Request real certificate
-echo "Requesting Let's Encrypt certificate..."
+echo "Waiting for services to start..."
+sleep 10
+
+# Step 2: Request certificate
+echo "Step 2: Requesting Let's Encrypt certificate..."
 
 STAGING_ARG=""
 if [ "$STAGING" = "1" ]; then
@@ -73,12 +61,19 @@ docker compose -f docker-compose.prod.yml run --rm --entrypoint "\
     --email ${EMAIL} \
     --agree-tos \
     --no-eff-email \
-    --force-renewal \
     -d ${DOMAIN} \
     -d www.${DOMAIN}" certbot
 
-echo "Reloading nginx..."
+# Step 3: Switch to full SSL config
+echo "Step 3: Switching to SSL config..."
+# Restore the original nginx.conf (with SSL)
+git checkout "${NGINX_PATH}/nginx.conf" 2>/dev/null || cp "${NGINX_PATH}/nginx.conf.bak" "${NGINX_PATH}/nginx.conf"
+
+# Reload nginx with SSL config
 docker compose -f docker-compose.prod.yml exec nginx nginx -s reload
+
+# Cleanup
+rm -f "${NGINX_PATH}/nginx.conf.bak"
 
 echo ""
 echo "=== SSL Certificate Setup Complete ==="
