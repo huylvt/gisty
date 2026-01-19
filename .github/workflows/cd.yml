@@ -141,11 +141,36 @@ jobs:
             # Deploy with zero downtime
             docker compose -f docker-compose.prod.yml --env-file deploy/.env up -d --remove-orphans
 
-            # Wait for health check
-            sleep 10
+            # Wait for services to be ready
+            echo "Waiting for services to start..."
+            sleep 15
 
-            # Verify deployment
-            curl -f http://localhost:8080/health || exit 1
+            # Check container status
+            echo "=== Container Status ==="
+            docker compose -f docker-compose.prod.yml ps
+
+            # Show logs if backend is not healthy
+            echo "=== Backend Logs (last 50 lines) ==="
+            docker logs gisty-app --tail 50 2>&1 || true
+
+            # Verify deployment with retries
+            echo "=== Health Check ==="
+            for i in 1 2 3 4 5; do
+              if docker exec gisty-app wget -qO- http://localhost:8080/health; then
+                echo ""
+                echo "Health check passed!"
+                break
+              fi
+              echo "Attempt $i failed, waiting 5s..."
+              sleep 5
+            done
+
+            # Final check
+            docker exec gisty-app wget -qO- http://localhost:8080/health || {
+              echo "=== Full Backend Logs ==="
+              docker logs gisty-app 2>&1
+              exit 1
+            }
 
             # Cleanup old images
             docker image prune -af --filter "until=24h"
