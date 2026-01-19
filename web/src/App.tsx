@@ -1,6 +1,6 @@
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import { Toaster } from 'react-hot-toast';
-import { Navbar } from './components';
+import { Navbar, Footer } from './components';
 import { EditorPage, ViewPage } from './pages';
 
 function App() {
@@ -11,20 +11,21 @@ function App() {
         toastOptions={{
           duration: 3000,
           style: {
-            background: '#1E293B',
+            background: '#111827',
             color: '#F8FAFC',
-            border: '1px solid #334155',
+            border: '1px solid #1E293B',
+            borderRadius: '0.75rem',
           },
           success: {
             iconTheme: {
-              primary: '#00D1FF',
-              secondary: '#1E293B',
+              primary: '#00D9FF',
+              secondary: '#111827',
             },
           },
           error: {
             iconTheme: {
               primary: '#EF4444',
-              secondary: '#1E293B',
+              secondary: '#111827',
             },
           },
         }}
@@ -34,6 +35,7 @@ function App() {
         <Route path="/" element={<EditorPage />} />
         <Route path="/:id" element={<ViewPage />} />
       </Routes>
+      <Footer />
     </BrowserRouter>
   );
 }

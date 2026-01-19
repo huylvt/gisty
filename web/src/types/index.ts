@@ -5,6 +5,7 @@ export interface Paste {
   created_at: string;
   expires_at?: string;
   view_count?: number;
+  burn_after_read?: boolean;
 }
 
 export interface CreatePasteRequest {
