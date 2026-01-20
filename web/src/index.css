@@ -17,11 +17,11 @@
   --error: #EF4444;
 }
 
-* {
+/* * {
   margin: 0;
   padding: 0;
   box-sizing: border-box;
-}
+} */
 
 body {
   font-family: 'Inter', system-ui, -apple-system, sans-serif;
@@ -34,20 +34,13 @@ body {
   background-attachment: fixed;
 }
 
-#root {
+/* #root {
   min-height: 100vh;
   display: flex;
   flex-direction: column;
-  width: 100%;
-}
-
-/* Main content wrapper */
-main, .main-content {
-  width: 100%;
-  display: flex;
-  flex-direction: column;
   align-items: center;
-}
+  width: 100%;
+} */
 
 /* Custom scrollbar */
 ::-webkit-scrollbar {
@@ -69,12 +62,12 @@ main, .main-content {
 }
 
 /* Glassmorphism effect */
-.glass {
+/* .glass {
   background: rgba(10, 15, 28, 0.85);
   backdrop-filter: blur(16px);
   -webkit-backdrop-filter: blur(16px);
   border-bottom: 1px solid rgba(30, 41, 59, 0.8);
-}
+} */
 
 /* Card styles */
 .card {

@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import Editor from '@monaco-editor/react';
-import { Copy, Download, Edit3, Clock, Code, Eye, Loader2, Link as LinkIcon, FileText, AlertTriangle, Flame } from 'lucide-react';
+import { Copy, Download, Edit3, Clock, Code, Eye, Loader2, Link as LinkIcon, AlertTriangle, Flame, Plus } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { api } from '../services/api';
 import type { Paste } from '../types';
@@ -71,7 +71,6 @@ export function ViewPage() {
 
   const handleClone = () => {
     if (!paste) return;
-    // Store content in sessionStorage and navigate to editor
     sessionStorage.setItem('gisty_clone_content', paste.content);
     sessionStorage.setItem('gisty_clone_language', paste.syntax_type);
     navigate('/');
@@ -147,11 +146,9 @@ export function ViewPage() {
   if (isLoading) {
     return (
       <div className="flex-1 flex items-center justify-center">
-        <div className="flex flex-col items-center gap-4 animate-fade-in">
-          <div className="relative">
-            <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-[var(--primary)] to-[var(--secondary)] flex items-center justify-center animate-pulse-glow">
-              <Loader2 className="w-8 h-8 text-white animate-spin" />
-            </div>
+        <div className="flex flex-col items-center gap-4">
+          <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-[var(--primary)] to-[var(--secondary)] flex items-center justify-center">
+            <Loader2 className="w-6 h-6 text-white animate-spin" />
           </div>
           <p className="text-[var(--text-muted)]">Loading paste...</p>
         </div>
@@ -162,20 +159,20 @@ export function ViewPage() {
   if (error) {
     return (
       <div className="flex-1 flex items-center justify-center px-4">
-        <div className="text-center max-w-md animate-fade-in">
-          <div className="w-20 h-20 rounded-2xl bg-[var(--error)]/10 border border-[var(--error)]/30 flex items-center justify-center mx-auto mb-6">
-            <AlertTriangle className="w-10 h-10 text-[var(--error)]" />
+        <div className="text-center max-w-md">
+          <div className="w-16 h-16 rounded-xl bg-[var(--error)]/10 border border-[var(--error)]/30 flex items-center justify-center mx-auto mb-4">
+            <AlertTriangle className="w-8 h-8 text-[var(--error)]" />
           </div>
-          <h2 className="text-2xl font-bold text-[var(--text-main)] mb-3">
+          <h2 className="text-xl font-bold text-[var(--text-main)] mb-2">
             Paste Not Found
           </h2>
-          <p className="text-[var(--text-muted)] mb-8">
+          <p className="text-sm text-[var(--text-muted)] mb-6">
             {error === 'paste has expired'
               ? 'This paste has expired and is no longer available.'
               : 'The paste you are looking for does not exist or has been deleted.'}
           </p>
           <Link to="/" className="btn-primary inline-flex items-center gap-2">
-            <FileText size={18} />
+            <Plus size={18} />
             Create New Paste
           </Link>
         </div>
@@ -189,98 +186,103 @@ export function ViewPage() {
   const charCount = paste.content.length;
 
   return (
-    <div className="flex-1 flex flex-col px-4 sm:px-6 lg:px-8 py-6 w-full">
-      <div className="max-w-5xl mx-auto w-full animate-fade-in">
-        {/* Header Card */}
-        <div className="card p-4 sm:p-6 mb-4">
-          <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
-            {/* Paste Info */}
-            <div className="flex flex-wrap items-center gap-3">
-              {/* Language badge */}
-              <div className="badge badge-primary">
-                <Code size={14} />
-                <span className="capitalize">{paste.syntax_type || 'plaintext'}</span>
-              </div>
-
-              {/* Stats */}
-              <div className="badge">
-                <Eye size={14} />
-                <span>{paste.view_count || 0} views</span>
-              </div>
-
-              <div className="badge">
-                <FileText size={14} />
-                <span>{lineCount} lines</span>
-              </div>
-
-              <div className="badge hidden sm:inline-flex">
-                <span>{formatBytes(charCount)}</span>
-              </div>
-
-              {/* Expiration warning */}
-              {paste.expires_at && (
-                <div className="badge badge-warning">
-                  <Clock size={14} />
-                  <span>Expires in {getRelativeTime(paste.expires_at)}</span>
-                </div>
-              )}
-
-              {/* Burn after read indicator */}
-              {paste.burn_after_read && (
-                <div className="badge" style={{ background: 'rgba(239, 68, 68, 0.1)', borderColor: 'rgba(239, 68, 68, 0.3)', color: '#EF4444' }}>
-                  <Flame size={14} />
-                  <span>Burns after read</span>
-                </div>
-              )}
-            </div>
-
-            {/* Action buttons */}
-            <div className="flex items-center gap-2 flex-wrap">
-              <button
-                onClick={handleCopyLink}
-                className="btn-ghost flex items-center gap-2 text-sm"
-                title="Copy link"
-              >
-                <LinkIcon size={16} />
-                <span className="hidden sm:inline">Copy Link</span>
-              </button>
-              <button
-                onClick={handleCopyRaw}
-                className="btn-ghost flex items-center gap-2 text-sm"
-                title="Copy raw content"
-              >
-                <Copy size={16} />
-                <span className="hidden sm:inline">Copy Raw</span>
-              </button>
-              <button
-                onClick={handleDownload}
-                className="btn-ghost flex items-center gap-2 text-sm"
-                title="Download"
-              >
-                <Download size={16} />
-                <span className="hidden sm:inline">Download</span>
-              </button>
-              <button
-                onClick={handleClone}
-                className="btn-primary flex items-center gap-2 text-sm"
-                title="Clone and edit"
-              >
-                <Edit3 size={16} />
-                <span>Clone</span>
-              </button>
-            </div>
+    <div className="flex-1 w-full flex flex-col">
+      <div className="flex-1 w-full px-6 sm:px-8 lg:px-12 py-6 flex flex-col">
+        {/* Toolbar */}
+        <div className="flex flex-wrap items-center gap-4 mb-4">
+          {/* Language */}
+          <div className="flex items-center gap-2">
+            <Code size={16} className="text-[var(--primary)]" />
+            <span className="text-sm font-medium capitalize">{paste.syntax_type || 'Plain Text'}</span>
           </div>
 
-          {/* Created time */}
-          <div className="mt-4 pt-4 border-t border-[var(--border)] flex items-center gap-2 text-sm text-[var(--text-muted)]">
+          {/* Separator */}
+          <div className="w-px h-4 bg-[var(--border)]" />
+
+          {/* Created */}
+          <div className="flex items-center gap-2 text-sm text-[var(--text-muted)]">
             <Clock size={14} />
-            <span>Created {formatDate(paste.created_at)}</span>
+            <span>{formatDate(paste.created_at)}</span>
+          </div>
+
+          {/* Separator */}
+          <div className="w-px h-4 bg-[var(--border)]" />
+
+          {/* Views */}
+          <div className="flex items-center gap-2 text-sm text-[var(--text-muted)]">
+            <Eye size={14} />
+            <span>{paste.view_count || 0} views</span>
+          </div>
+
+          {/* Separator */}
+          <div className="w-px h-4 bg-[var(--border)]" />
+
+          {/* Size */}
+          <div className="text-sm text-[var(--text-muted)]">
+            {lineCount} lines, {formatBytes(charCount)}
+          </div>
+
+          {/* Expiration warning */}
+          {paste.expires_at && (
+            <>
+              <div className="w-px h-4 bg-[var(--border)]" />
+              <div className="flex items-center gap-1.5 text-xs text-[var(--warning)]">
+                <Clock size={14} />
+                <span>Expires in {getRelativeTime(paste.expires_at)}</span>
+              </div>
+            </>
+          )}
+
+          {/* Burn warning */}
+          {paste.burn_after_read && (
+            <>
+              <div className="w-px h-4 bg-[var(--border)]" />
+              <div className="flex items-center gap-1.5 text-xs text-[var(--error)]">
+                <Flame size={14} />
+                <span>Burns after read</span>
+              </div>
+            </>
+          )}
+
+          {/* Spacer */}
+          <div className="flex-1" />
+
+          {/* Action Buttons */}
+          <div className="flex items-center gap-2">
+            <button
+              onClick={handleCopyLink}
+              className="btn-icon"
+              title="Copy Link"
+            >
+              <LinkIcon size={16} />
+            </button>
+            <button
+              onClick={handleCopyRaw}
+              className="btn-icon"
+              title="Copy Raw"
+            >
+              <Copy size={16} />
+            </button>
+            <button
+              onClick={handleDownload}
+              className="btn-icon"
+              title="Download"
+            >
+              <Download size={16} />
+            </button>
+            <button
+              onClick={handleClone}
+              className="btn-primary flex items-center gap-2"
+            >
+              <Edit3 size={16} />
+              <span>Clone & Edit</span>
+            </button>
           </div>
         </div>
 
-        {/* Code viewer */}
-        <div className="card overflow-hidden animate-slide-up" style={{ animationDelay: '0.1s' }}>
-          {/* Window Header */}
+        {/* Editor */}
+        <div className="flex-1 card overflow-hidden">
+          {/* Editor Header */}
           <div className="code-header">
             <div className="code-dots">
               <div className="code-dot code-dot-red" />
@@ -293,8 +295,8 @@ export function ViewPage() {
             <div className="w-[52px]" />
           </div>
 
-          {/* Editor */}
-          <div className="min-h-[50vh] lg:min-h-[60vh]">
+          {/* Monaco Editor */}
+          <div className="h-[calc(100vh-220px)] min-h-[400px]">
             <Editor
               height="100%"
               language={getMonacoLanguage(paste.syntax_type)}
