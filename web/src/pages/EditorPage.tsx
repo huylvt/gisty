@@ -11,7 +11,7 @@ export function EditorPage() {
   const navigate = useNavigate();
   const [content, setContent] = useState('');
   const [language, setLanguage] = useState('');
-  const [expiration, setExpiration] = useState('');
+  const [expiration, setExpiration] = useState('1d');
   const [isLoading, setIsLoading] = useState(false);
 
   // Load cloned content from sessionStorage
@@ -37,12 +37,10 @@ export function EditorPage() {
 
     setIsLoading(true);
     try {
-      const isBurn = expiration === 'burn';
       const response = await api.createPaste({
         content,
         syntax_type: language || undefined,
-        expires_in: isBurn ? '1d' : expiration || undefined,
-        burn_after_read: isBurn,
+        expires_in: expiration || undefined,
       });
 
       const fullUrl = `${window.location.origin}/${response.short_id}`;

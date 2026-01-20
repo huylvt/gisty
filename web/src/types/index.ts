@@ -13,7 +13,6 @@ export interface CreatePasteRequest {
   syntax_type?: string;
   expires_in?: string;
   is_private?: boolean;
-  burn_after_read?: boolean;
 }
 
 export interface CreatePasteResponse {
