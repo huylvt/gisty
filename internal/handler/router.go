@@ -5,6 +5,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/huylvt/gisty/internal/config"
 	"github.com/huylvt/gisty/internal/middleware"
+	"github.com/huylvt/gisty/internal/repository"
 	swaggerFiles "github.com/swaggo/files"
 	ginSwagger "github.com/swaggo/gin-swagger"
 )
@@ -13,6 +14,7 @@ import (
 type RouterDeps struct {
 	PasteHandler *PasteHandler
 	RateLimiter  *middleware.RateLimiter
+	S3Client     *repository.S3
 }
 
 // NewRouter creates and configures a new Gin router
@@ -30,8 +32,9 @@ func NewRouter(cfg *config.Config, deps *RouterDeps) *gin.Engine {
 	router.Use(corsMiddleware())
 
 	// Health check
-	healthHandler := NewHealthHandler()
+	healthHandler := NewHealthHandler(deps.S3Client)
 	router.GET("/health", healthHandler.Health)
+	router.GET("/debug/s3", healthHandler.DebugS3)
 
 	// Swagger documentation
 	router.GET("/docs/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))

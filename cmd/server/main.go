@@ -141,6 +141,7 @@ func main() {
 	deps := &handler.RouterDeps{
 		PasteHandler: pasteHandler,
 		RateLimiter:  rateLimiter,
+		S3Client:     s3Client,
 	}
 	router := handler.NewRouter(cfg, deps)
 
