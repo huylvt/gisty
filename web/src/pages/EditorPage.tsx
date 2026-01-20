@@ -207,7 +207,8 @@ export function EditorPage() {
                   cursorBlinking: 'smooth',
                   cursorSmoothCaretAnimation: 'on',
                   smoothScrolling: true,
-                  placeholder: 'Paste your code here...',
+                  readOnly: false,
+                  domReadOnly: false,
                 }}
               />
             </div>
