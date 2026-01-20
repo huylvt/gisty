@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"log"
 	"strings"
 	"time"
 
@@ -134,40 +135,53 @@ func NewPasteService(kgs *KGS, storage *Storage, cache *Cache, pasteRepo *reposi
 
 // CreatePaste creates a new paste
 func (s *PasteService) CreatePaste(ctx context.Context, req *CreatePasteRequest) (*CreatePasteResponse, error) {
+	log.Printf("[PasteService.CreatePaste] Starting: content_len=%d, syntax=%s, expires_in=%s",
+		len(req.Content), req.SyntaxType, req.ExpiresIn)
+
 	// Validate content
 	if len(req.Content) == 0 {
+		log.Printf("[PasteService.CreatePaste] Error: empty content")
 		return nil, ErrEmptyContent
 	}
 	if len(req.Content) > MaxContentSize {
+		log.Printf("[PasteService.CreatePaste] Error: content too large (%d > %d)", len(req.Content), MaxContentSize)
 		return nil, ErrContentTooLarge
 	}
 
 	// Normalize and validate syntax type
 	syntaxType := strings.ToLower(strings.TrimSpace(req.SyntaxType))
 	if !ValidSyntaxTypes[syntaxType] {
+		log.Printf("[PasteService.CreatePaste] Error: invalid syntax type: %s", syntaxType)
 		return nil, ErrInvalidSyntaxType
 	}
 	if syntaxType == "" {
 		// Auto-detect language from content
 		syntaxType = s.syntaxDetector.DetectLanguage(req.Content)
+		log.Printf("[PasteService.CreatePaste] Auto-detected syntax: %s", syntaxType)
 	}
 
 	// Parse expiration
 	expiresAt, burnAfterRead, err := s.parseExpiration(req.ExpiresIn)
 	if err != nil {
+		log.Printf("[PasteService.CreatePaste] Error parsing expiration '%s': %v", req.ExpiresIn, err)
 		return nil, err
 	}
+	log.Printf("[PasteService.CreatePaste] Parsed expiration: expiresAt=%v, burnAfterRead=%v", expiresAt, burnAfterRead)
 
 	// Get a unique short ID from KGS
 	shortID, err := s.kgs.GetNextKey(ctx)
 	if err != nil {
+		log.Printf("[PasteService.CreatePaste] Error getting short ID from KGS: %v", err)
 		return nil, fmt.Errorf("paste: failed to get short ID: %w", err)
 	}
+	log.Printf("[PasteService.CreatePaste] Got short ID: %s", shortID)
 
 	// Save content to S3
 	if err := s.storage.SaveContent(ctx, shortID, req.Content); err != nil {
+		log.Printf("[PasteService.CreatePaste] Error saving to S3: %v", err)
 		return nil, fmt.Errorf("paste: failed to save content: %w", err)
 	}
+	log.Printf("[PasteService.CreatePaste] Saved content to S3")
 
 	// Create paste record in MongoDB
 	paste := &model.Paste{
@@ -181,10 +195,12 @@ func (s *PasteService) CreatePaste(ctx context.Context, req *CreatePasteRequest)
 	}
 
 	if err := s.pasteRepo.Create(ctx, paste); err != nil {
+		log.Printf("[PasteService.CreatePaste] Error creating MongoDB record: %v", err)
 		// Try to clean up S3 on failure
 		_ = s.storage.DeleteContent(ctx, shortID)
 		return nil, fmt.Errorf("paste: failed to create record: %w", err)
 	}
+	log.Printf("[PasteService.CreatePaste] Created MongoDB record")
 
 	// Cache the content (optional, best effort)
 	cacheTTL := DefaultCacheTTL

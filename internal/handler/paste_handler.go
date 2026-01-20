@@ -2,6 +2,7 @@ package handler
 
 import (
 	"errors"
+	"log"
 	"net/http"
 	"strings"
 
@@ -67,18 +68,24 @@ type ErrorResponse struct {
 func (h *PasteHandler) CreatePaste(c *gin.Context) {
 	var req service.CreatePasteRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
+		log.Printf("[CreatePaste] Failed to bind JSON: %v", err)
 		c.JSON(http.StatusBadRequest, gin.H{
 			"error": "Invalid request body",
 		})
 		return
 	}
 
+	log.Printf("[CreatePaste] Request: syntax_type=%s, expires_in=%s, content_length=%d",
+		req.SyntaxType, req.ExpiresIn, len(req.Content))
+
 	response, err := h.pasteService.CreatePaste(c.Request.Context(), &req)
 	if err != nil {
+		log.Printf("[CreatePaste] Error: %v", err)
 		h.handleError(c, err)
 		return
 	}
 
+	log.Printf("[CreatePaste] Success: short_id=%s", response.ShortID)
 	c.JSON(http.StatusCreated, response)
 }
 
