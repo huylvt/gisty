@@ -85,15 +85,15 @@ export function EditorPage() {
   };
 
   return (
-    <div className="flex-1 flex flex-col">
+    <div className="flex-1 flex flex-col w-full items-center">
       <LoadingBar isLoading={isLoading} />
 
       {/* Hero Section */}
-      <div className="relative overflow-hidden py-8 sm:py-12 px-4 sm:px-6 lg:px-8">
+      <div className="relative overflow-hidden py-8 sm:py-12 px-4 sm:px-6 lg:px-8 w-full">
         <div className="hero-orb hero-orb-1" />
         <div className="hero-orb hero-orb-2" />
 
-        <div className="relative max-w-4xl mx-auto text-center animate-fade-in">
+        <div className="relative max-w-4xl mx-auto text-center animate-fade-in w-full">
           <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-[var(--bg-card)]/50 border border-[var(--border)] mb-6">
             <Sparkles size={16} className="text-[var(--primary)]" />
             <span className="text-sm text-[var(--text-muted)]">Share code instantly, no account required</span>
@@ -111,8 +111,8 @@ export function EditorPage() {
       </div>
 
       {/* Editor Section */}
-      <div className="flex-1 px-4 sm:px-6 lg:px-8 pb-8">
-        <div className="max-w-6xl mx-auto animate-slide-up" style={{ animationDelay: '0.1s' }}>
+      <div className="flex-1 px-4 sm:px-6 lg:px-8 pb-8 w-full">
+        <div className="max-w-5xl mx-auto w-full animate-slide-up" style={{ animationDelay: '0.1s' }}>
           {/* Toolbar */}
           <div className="toolbar flex-wrap mb-4">
             {/* Language selector */}

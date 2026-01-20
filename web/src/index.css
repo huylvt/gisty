@@ -38,6 +38,15 @@ body {
   min-height: 100vh;
   display: flex;
   flex-direction: column;
+  width: 100%;
+}
+
+/* Main content wrapper */
+main, .main-content {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
 }
 
 /* Custom scrollbar */

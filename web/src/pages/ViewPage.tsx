@@ -189,8 +189,8 @@ export function ViewPage() {
   const charCount = paste.content.length;
 
   return (
-    <div className="flex-1 flex flex-col px-4 sm:px-6 lg:px-8 py-6">
-      <div className="max-w-6xl mx-auto w-full animate-fade-in">
+    <div className="flex-1 flex flex-col px-4 sm:px-6 lg:px-8 py-6 w-full">
+      <div className="max-w-5xl mx-auto w-full animate-fade-in">
         {/* Header Card */}
         <div className="card p-4 sm:p-6 mb-4">
           <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
