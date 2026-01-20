@@ -7,6 +7,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"log"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/s3"
@@ -36,6 +37,7 @@ type Storage struct {
 
 // NewStorage creates a new Storage service
 func NewStorage(s3Client *repository.S3) *Storage {
+	log.Printf("[Storage] Initialized with bucket: %s", s3Client.BucketName)
 	return &Storage{
 		s3Client:   s3Client,
 		bucketName: s3Client.BucketName,
@@ -47,10 +49,13 @@ func (s *Storage) SaveContent(ctx context.Context, shortID, content string) erro
 	// Compress content with gzip
 	compressed, err := compressContent(content)
 	if err != nil {
+		log.Printf("[Storage.SaveContent] Compression failed: %v", err)
 		return fmt.Errorf("storage: failed to compress content: %w", err)
 	}
 
 	key := s.buildKey(shortID)
+	log.Printf("[Storage.SaveContent] Uploading to bucket=%s, key=%s, size=%d bytes (compressed from %d)",
+		s.bucketName, key, len(compressed), len(content))
 
 	_, err = s.s3Client.Client.PutObject(ctx, &s3.PutObjectInput{
 		Bucket:          aws.String(s.bucketName),
@@ -63,9 +68,11 @@ func (s *Storage) SaveContent(ctx context.Context, shortID, content string) erro
 		},
 	})
 	if err != nil {
+		log.Printf("[Storage.SaveContent] PutObject failed: bucket=%s, key=%s, error=%v", s.bucketName, key, err)
 		return fmt.Errorf("storage: failed to upload content: %w", err)
 	}
 
+	log.Printf("[Storage.SaveContent] Upload successful: %s", key)
 	return nil
 }
 

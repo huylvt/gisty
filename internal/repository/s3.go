@@ -2,6 +2,7 @@ package repository
 
 import (
 	"context"
+	"log"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/config"
@@ -26,6 +27,10 @@ type S3 struct {
 
 // NewS3Client creates a new S3 connection
 func NewS3Client(ctx context.Context, cfg S3Config) (*S3, error) {
+	log.Printf("[S3] Initializing client: endpoint=%s, region=%s, bucket=%s, accessKey=%s...%s",
+		cfg.Endpoint, cfg.Region, cfg.BucketName,
+		cfg.AccessKeyID[:4], cfg.AccessKeyID[len(cfg.AccessKeyID)-4:])
+
 	// Create custom credentials provider
 	credProvider := credentials.NewStaticCredentialsProvider(
 		cfg.AccessKeyID,
@@ -42,6 +47,7 @@ func NewS3Client(ctx context.Context, cfg S3Config) (*S3, error) {
 	// Load AWS config
 	awsCfg, err := config.LoadDefaultConfig(ctx, opts...)
 	if err != nil {
+		log.Printf("[S3] Failed to load AWS config: %v", err)
 		return nil, err
 	}
 
@@ -50,6 +56,7 @@ func NewS3Client(ctx context.Context, cfg S3Config) (*S3, error) {
 
 	// Add custom endpoint if specified (for MinIO or other S3-compatible storage)
 	if cfg.Endpoint != "" {
+		log.Printf("[S3] Using custom endpoint: %s (PathStyle=true)", cfg.Endpoint)
 		s3Opts = append(s3Opts, func(o *s3.Options) {
 			o.BaseEndpoint = aws.String(cfg.Endpoint)
 			o.UsePathStyle = true // Required for MinIO
@@ -58,6 +65,7 @@ func NewS3Client(ctx context.Context, cfg S3Config) (*S3, error) {
 
 	client := s3.NewFromConfig(awsCfg, s3Opts...)
 
+	log.Printf("[S3] Client initialized successfully")
 	return &S3{
 		Client:     client,
 		BucketName: cfg.BucketName,
