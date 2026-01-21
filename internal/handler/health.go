@@ -92,7 +92,7 @@ func (h *HealthHandler) DebugS3(c *gin.Context) {
 		response.HeadBucket = "OK"
 	}
 
-	// Test 3: Put object
+	// Test 3: Put object (simple)
 	testContent := "Hello from Gisty debug endpoint!"
 	_, err = h.s3Client.Client.PutObject(ctx, &s3.PutObjectInput{
 		Bucket:      aws.String(h.s3Client.BucketName),
@@ -106,6 +106,29 @@ func (h *HealthHandler) DebugS3(c *gin.Context) {
 		return
 	}
 	response.PutObject = "OK"
+
+	// Test 3b: Put object with gzip encoding and metadata (like SaveContent)
+	testKeyGzip := response.TestKey + ".gz"
+	_, err = h.s3Client.Client.PutObject(ctx, &s3.PutObjectInput{
+		Bucket:          aws.String(h.s3Client.BucketName),
+		Key:             aws.String(testKeyGzip),
+		Body:            strings.NewReader(testContent),
+		ContentType:     aws.String("text/plain"),
+		ContentEncoding: aws.String("gzip"),
+		Metadata: map[string]string{
+			"original-size": "100",
+		},
+	})
+	if err != nil {
+		response.PutObject = fmt.Sprintf("OK (simple), FAIL with gzip+metadata: %v", err)
+	} else {
+		response.PutObject = "OK (simple + gzip+metadata)"
+		// Cleanup gzip test file
+		_, _ = h.s3Client.Client.DeleteObject(ctx, &s3.DeleteObjectInput{
+			Bucket: aws.String(h.s3Client.BucketName),
+			Key:    aws.String(testKeyGzip),
+		})
+	}
 
 	// Test 4: Get object
 	_, err = h.s3Client.Client.GetObject(ctx, &s3.GetObjectInput{
