@@ -189,59 +189,38 @@ export function ViewPage() {
     <div className="flex-1 w-full flex flex-col">
       <div className="flex-1 w-full px-6 sm:px-8 lg:px-12 py-6 flex flex-col">
         {/* Toolbar */}
-        <div className="flex flex-wrap items-center gap-4 mb-4">
-          {/* Language */}
-          <div className="flex items-center gap-2">
-            <Code size={16} className="text-[var(--primary)]" />
-            <span className="text-sm font-medium capitalize">{paste.syntax_type || 'Plain Text'}</span>
+        <div className="flex flex-wrap items-center gap-3 mb-4">
+          {/* Language Badge */}
+          <div className="badge badge-primary">
+            <Code size={14} />
+            <span className="capitalize">{paste.syntax_type || 'Plain Text'}</span>
           </div>
 
-          {/* Separator */}
-          <div className="w-px h-4 bg-[var(--border)]" />
-
-          {/* Created */}
-          <div className="flex items-center gap-2 text-sm text-[var(--text-muted)]">
-            <Clock size={14} />
-            <span>{formatDate(paste.created_at)}</span>
-          </div>
-
-          {/* Separator */}
-          <div className="w-px h-4 bg-[var(--border)]" />
-
-          {/* Views */}
-          <div className="flex items-center gap-2 text-sm text-[var(--text-muted)]">
+          {/* Stats */}
+          <div className="badge">
             <Eye size={14} />
             <span>{paste.view_count || 0} views</span>
           </div>
 
-          {/* Separator */}
-          <div className="w-px h-4 bg-[var(--border)]" />
-
-          {/* Size */}
-          <div className="text-sm text-[var(--text-muted)]">
-            {lineCount} lines, {formatBytes(charCount)}
+          <div className="hidden sm:flex badge">
+            <Clock size={14} />
+            <span>{formatDate(paste.created_at)}</span>
           </div>
 
           {/* Expiration warning */}
           {paste.expires_at && (
-            <>
-              <div className="w-px h-4 bg-[var(--border)]" />
-              <div className="flex items-center gap-1.5 text-xs text-[var(--warning)]">
-                <Clock size={14} />
-                <span>Expires in {getRelativeTime(paste.expires_at)}</span>
-              </div>
-            </>
+            <div className="badge badge-warning">
+              <Clock size={14} />
+              <span>Expires in {getRelativeTime(paste.expires_at)}</span>
+            </div>
           )}
 
           {/* Burn warning */}
           {paste.burn_after_read && (
-            <>
-              <div className="w-px h-4 bg-[var(--border)]" />
-              <div className="flex items-center gap-1.5 text-xs text-[var(--error)]">
-                <Flame size={14} />
-                <span>Burns after read</span>
-              </div>
-            </>
+            <div className="badge badge-error">
+              <Flame size={14} />
+              <span>Burns after read</span>
+            </div>
           )}
 
           {/* Spacer */}
@@ -275,7 +254,7 @@ export function ViewPage() {
               className="btn-primary flex items-center gap-2"
             >
               <Edit3 size={16} />
-              <span>Clone & Edit</span>
+              <span className="hidden sm:inline">Clone & Edit</span>
             </button>
           </div>
         </div>
@@ -292,7 +271,9 @@ export function ViewPage() {
             <span className="text-xs text-[var(--text-muted)] font-mono">
               {paste.short_id}{getFileExtension(paste.syntax_type)}
             </span>
-            <div className="w-[52px]" />
+            <span className="text-xs text-[var(--text-muted)]">
+              {lineCount} lines · {formatBytes(charCount)}
+            </span>
           </div>
 
           {/* Monaco Editor */}
