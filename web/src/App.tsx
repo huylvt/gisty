@@ -33,6 +33,7 @@ function App() {
       <Navbar />
       <Routes>
         <Route path="/" element={<EditorPage />} />
+        <Route path="/view/:id" element={<ViewPage />} />
         <Route path="/:id" element={<ViewPage />} />
       </Routes>
       <Footer />
