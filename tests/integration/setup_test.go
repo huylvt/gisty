@@ -192,6 +192,7 @@ func SetupTestEnv(t *testing.T) *TestEnv {
 	deps := &handler.RouterDeps{
 		PasteHandler: pasteHandler,
 		RateLimiter:  rateLimiter,
+		S3Client:     s3Client,
 	}
 	router := handler.NewRouter(cfg, deps)
 
@@ -368,6 +369,7 @@ func SetupTestEnvWithRateLimit(t *testing.T, requestsPerMinute int) *TestEnv {
 	deps := &handler.RouterDeps{
 		PasteHandler: pasteHandler,
 		RateLimiter:  rateLimiter,
+		S3Client:     s3Client,
 	}
 	router := handler.NewRouter(cfg, deps)
 
