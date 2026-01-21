@@ -131,7 +131,7 @@ func BenchmarkEncode(b *testing.B) {
 
 func BenchmarkDecode(b *testing.B) {
 	for i := 0; i < b.N; i++ {
-		Decode("8m0Kx")
+		_, _ = Decode("8m0Kx")
 	}
 }
 
@@ -145,6 +145,6 @@ func BenchmarkDecodeMaxUint64(b *testing.B) {
 	encoded := Encode(math.MaxUint64)
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
-		Decode(encoded)
+		_, _ = Decode(encoded)
 	}
 }

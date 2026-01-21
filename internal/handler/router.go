@@ -31,13 +31,16 @@ func NewRouter(cfg *config.Config, deps *RouterDeps) *gin.Engine {
 	router.Use(gin.Recovery())
 	router.Use(corsMiddleware())
 
-	// Health check
-	healthHandler := NewHealthHandler(deps.S3Client)
-	router.GET("/health", healthHandler.Health)
-	router.GET("/debug/s3", healthHandler.DebugS3)
-
 	// Swagger documentation
 	router.GET("/docs/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
+
+	// Health check and API routes (require deps)
+	if deps != nil {
+		// Health check
+		healthHandler := NewHealthHandler(deps.S3Client)
+		router.GET("/health", healthHandler.Health)
+		router.GET("/debug/s3", healthHandler.DebugS3)
+	}
 
 	// API v1 routes
 	v1 := router.Group("/api/v1")
