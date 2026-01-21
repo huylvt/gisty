@@ -57,15 +57,13 @@ func (s *Storage) SaveContent(ctx context.Context, shortID, content string) erro
 	log.Printf("[Storage.SaveContent] Uploading to bucket=%s, key=%s, size=%d bytes (compressed from %d)",
 		s.bucketName, key, len(compressed), len(content))
 
+	// Note: ContentEncoding and Metadata headers removed due to Ceph S3 compatibility issues
+	// Content is still gzip compressed, we handle decompression on read
 	_, err = s.s3Client.Client.PutObject(ctx, &s3.PutObjectInput{
-		Bucket:          aws.String(s.bucketName),
-		Key:             aws.String(key),
-		Body:            bytes.NewReader(compressed),
-		ContentType:     aws.String("text/plain"),
-		ContentEncoding: aws.String("gzip"),
-		Metadata: map[string]string{
-			"original-size": fmt.Sprintf("%d", len(content)),
-		},
+		Bucket:      aws.String(s.bucketName),
+		Key:         aws.String(key),
+		Body:        bytes.NewReader(compressed),
+		ContentType: aws.String("application/octet-stream"),
 	})
 	if err != nil {
 		log.Printf("[Storage.SaveContent] PutObject failed: bucket=%s, key=%s, error=%v", s.bucketName, key, err)
