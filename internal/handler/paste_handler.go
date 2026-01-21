@@ -149,11 +149,20 @@ func (h *PasteHandler) DeletePaste(c *gin.Context) {
 }
 
 // ShortURL handles GET /:id with content negotiation
-// Returns JSON for Accept: application/json, plain text otherwise
+// Returns JSON for Accept: application/json, redirects to frontend for text/html, plain text otherwise
 func (h *PasteHandler) ShortURL(c *gin.Context) {
 	shortID := c.Param("id")
 	if shortID == "" {
 		c.String(http.StatusBadRequest, "Missing paste ID")
+		return
+	}
+
+	// Content negotiation based on Accept header
+	accept := c.GetHeader("Accept")
+
+	// Browser request (text/html) - redirect to frontend for SPA rendering
+	if strings.Contains(accept, "text/html") {
+		c.Redirect(http.StatusFound, "/view/"+shortID)
 		return
 	}
 
@@ -163,14 +172,13 @@ func (h *PasteHandler) ShortURL(c *gin.Context) {
 		return
 	}
 
-	// Content negotiation based on Accept header
-	accept := c.GetHeader("Accept")
+	// JSON response for API clients
 	if strings.Contains(accept, "application/json") {
 		c.JSON(http.StatusOK, response)
 		return
 	}
 
-	// Default: return plain text content
+	// Default: return plain text content (curl, wget, etc.)
 	c.Header("X-Syntax-Type", response.SyntaxType)
 	c.Header("X-Created-At", response.CreatedAt)
 	if response.ExpiresAt != nil {
