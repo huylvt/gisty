@@ -166,7 +166,7 @@ export function EditorPage() {
           </div>
 
           {/* Monaco Editor */}
-          <div className="h-[calc(100vh-220px)] min-h-[400px]">
+          <div className="h-[calc(100vh-320px)] min-h-[300px]">
             <Editor
               height="100%"
               language={getMonacoLanguage(language)}
